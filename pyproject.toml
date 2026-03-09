@@ -1,0 +1,140 @@
+[build-system]
+requires = [
+    "hatchling>=1,<2",
+    "hatch-vcs>=0.5",
+]
+build-backend = "hatchling.build"
+
+[project]
+name = "tap-noaa-gfs"
+version = "0.0.1"
+description = "Singer tap for NoaaGfs, built with the Meltano Singer SDK."
+readme = "README.md"
+authors = [{ name = "Matt Elgazar", email = "melgazar9@gmail.com" }]
+keywords = [
+    "ELT",
+    "NoaaGfs",
+]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+license = "MIT"
+license-files = [ "LICENSE" ]
+requires-python = ">=3.10"
+dependencies = [
+    "singer-sdk~=0.53.5",
+    "typing-extensions>=4.5.0; python_version < '3.13'",
+]
+
+[project.optional-dependencies]
+s3 = [
+    "s3fs>=2026.1.0",
+]
+
+[project.scripts]
+# CLI declaration
+tap-noaa-gfs = 'tap_noaa_gfs.tap:TapNoaaGfs.cli'
+
+[dependency-groups]
+dev = [
+    { include-group = "test" },
+]
+test = [
+    "pytest>=9",
+    "pytest-github-actions-annotate-failures>=0.3",
+    "singer-sdk[testing]",
+]
+typing = [
+    "mypy>=1.19.1",
+    "ty>=0.0.18",
+    "types-requests",
+]
+
+[tool.hatch.version]
+fallback-version = "0.1.0.dev0"
+source = "vcs"
+
+[tool.pytest]
+addopts = [
+    "--durations=10",
+    "-ra",
+    "--strict-config",
+    "--strict-markers",
+]
+filterwarnings = [
+    "error",
+    "once:No records were available to test:UserWarning",
+]
+log_level = "INFO"
+minversion = "9.0"
+testpaths = [
+    "tests",
+]
+xfail_strict = true
+
+[tool.mypy]
+enable_error_code = [
+    "ignore-without-code",
+    "redundant-expr",
+    "truthy-bool",
+]
+warn_redundant_casts = true
+warn_unreachable = true
+warn_unused_configs = true
+warn_unused_ignores = true
+
+[tool.ty.rules]
+unused-type-ignore-comment = "ignore"
+
+[tool.ruff]
+line-length = 100
+required-version = ">=0.15"
+
+[tool.ruff.lint]
+future-annotations = true
+ignore = [
+    "COM812",  # missing-trailing-comma
+]
+select = ["ALL"]
+
+[tool.ruff.lint.flake8-annotations]
+allow-star-arg-any = true
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+# This configuration can be used to customize tox environments
+[tool.tox]
+min_version = "4.43"
+requires = [
+    "tox>=4.43",
+    "tox-uv",
+]
+env_list = [
+    "typing",
+    { product = [
+        { prefix = "3.", start = 10 },
+    ] },
+]
+
+[tool.tox.env_run_base]
+runner = "uv-venv-lock-runner"
+pass_env = [
+    "GITHUB_*",
+    "TAP_NOAA_GFS_*",
+]
+dependency_groups = [ "test" ]
+commands = [ [ "pytest", { replace = "posargs", default = [ "tests" ], extend = true } ] ]
+
+[tool.tox.env.typing]
+dependency_groups = [ "test", "typing" ]
+commands = [
+    [ "mypy", { replace = "posargs", default = [ "tap_noaa_gfs", "tests" ], extend = true } ],
+    [ "ty", "check", { replace = "posargs", default = [ "tap_noaa_gfs", "tests" ], extend = true } ],
+]

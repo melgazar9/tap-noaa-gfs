@@ -1,0 +1,46 @@
+"""Custom client handling, including NoaaGfsStream base class."""
+
+from __future__ import annotations
+
+import sys
+from typing import TYPE_CHECKING
+
+from singer_sdk.streams import Stream
+
+if sys.version_info >= (3, 12):
+    from typing import override
+else:
+    from typing_extensions import override
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from singer_sdk.helpers.types import Context
+
+
+class NoaaGfsStream(Stream):
+    """Stream class for NoaaGfs streams."""
+
+    @override
+    def get_records(
+        self,
+        context: Context | None,
+    ) -> Iterable[dict]:
+        """Return a generator of record-type dictionary objects.
+
+        The optional `context` argument is used to identify a specific slice of the
+        stream if partitioning is required for the stream. Most implementations do not
+        require partitioning and should ignore the `context` argument.
+
+        Args:
+            context: Stream partition or context dictionary.
+
+        Raises:
+            NotImplementedError: If the implementation is TODO
+        """
+        # TODO: Write logic to extract data from the upstream source.
+        # records = mysource.getall()
+        # for record in records:
+        #     yield record.to_dict()
+        errmsg = "The method is not yet implemented (TODO)"
+        raise NotImplementedError(errmsg)
