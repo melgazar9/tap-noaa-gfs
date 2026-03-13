@@ -152,7 +152,9 @@ class GribParser:
         records: list[dict] = []
 
         for ds in datasets:
-            matched_cfgrib_vars = sorted(set(ds.data_vars) & set(cfgrib_to_nomads))
+            matched_cfgrib_vars = sorted(
+                str(v) for v in ds.data_vars if str(v) in cfgrib_to_nomads
+            )
             if not matched_cfgrib_vars:
                 continue
 
