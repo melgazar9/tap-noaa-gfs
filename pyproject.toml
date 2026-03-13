@@ -75,6 +75,7 @@ addopts = [
 filterwarnings = [
     "error",
     "once:No records were available to test:UserWarning",
+    "ignore:ecCodes .* or higher is recommended:UserWarning",
 ]
 log_level = "INFO"
 minversion = "9.0"
