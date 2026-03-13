@@ -1,1 +1,1 @@
-"""Tap for NoaaGfs."""
+"""Tap for NOAA GFS weather forecast model data."""

@@ -1,13 +1,15 @@
-send_anonymous_usage_stats: true
+version: 1
+send_anonymous_usage_stats: false
 project_id: "tap-noaa-gfs"
 default_environment: test
 requires_meltano: ">=4.0"
 environments:
 - name: test
+
 plugins:
   extractors:
-  - name: "tap-noaa-gfs"
-    namespace: "tap_noaa_gfs"
+  - name: tap-noaa-gfs
+    namespace: tap_noaa_gfs
     pip_url: -e .
     capabilities:
     - state
@@ -15,32 +17,117 @@ plugins:
     - discover
     - about
     - stream-maps
-    - structured-logging
 
-    # TODO: Declare settings and their types here:
     settings:
-    - name: username
-      label: Username
-      description: The username to use for authentication
+    - name: source
+      kind: string
+      label: Data Source
+      description: "Data source: 'nomads' (filtered, ~10 day retention) or 'aws_s3' (full files, 2021+)"
+      value: "nomads"
 
-    - name: password
-      kind: password
-      label: Password
-      description: The password to use for authentication
-      sensitive: true
+    - name: nomads_url
+      kind: string
+      label: NOMADS URL
+      description: "NOMADS GFS 0.25-degree filter endpoint URL"
+      value: "https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p25.pl"
+
+    - name: aws_s3_bucket
+      kind: string
+      label: AWS S3 Bucket
+      description: "AWS S3 bucket for GFS data (public, no auth)"
+      value: "noaa-gfs-bdp-pds"
 
     - name: start_date
       kind: date_iso8601
       label: Start Date
-      description: Initial date to start extracting data from
+      description: "First forecast run date to extract (YYYY-MM-DD)"
 
-    # TODO: Declare required settings here:
-    settings_group_validation:
-    - [username, password]
+    - name: end_date
+      kind: date_iso8601
+      label: End Date
+      description: "Last forecast run date. Defaults to today (UTC)"
 
-    # TODO: Declare default configuration values here:
+    - name: cycles
+      kind: array
+      label: Cycles
+      description: "GFS cycles to extract: 00, 06, 12, 18 UTC"
+      value: ["00", "06", "12", "18"]
+
+    - name: forecast_hours
+      kind: array
+      label: Forecast Hours
+      description: "Forecast hours to extract (0-384)"
+      value: [0, 6, 12, 18, 24, 48, 72, 96, 120, 168, 240, 336]
+
+    - name: variables
+      kind: array
+      label: Variables
+      description: "GRIB2 variable names (TMP, UGRD, VGRD, APCP, RH, etc.)"
+      value: ["TMP", "UGRD", "VGRD", "APCP", "RH"]
+
+    - name: levels
+      kind: array
+      label: Levels
+      description: "Atmospheric levels (e.g. '2 m above ground', 'surface')"
+      value: ["2 m above ground", "10 m above ground", "surface"]
+
+    - name: bounding_box
+      kind: object
+      label: Bounding Box
+      description: "Geographic bounding box (north, south, east, west in degrees)"
+      value:
+        north: 50
+        south: 24
+        west: -125
+        east: -66
+
+    - name: grid_step
+      kind: integer
+      label: Grid Step
+      description: "Extract every Nth grid point (1=0.25°, 4=1°)"
+      value: 4
+
+    - name: max_concurrent_downloads
+      kind: integer
+      label: Max Concurrent Downloads
+      description: "Parallel GRIB2 downloads per partition"
+      value: 2
+
+    - name: max_requests_per_minute
+      kind: integer
+      label: Max Requests Per Minute
+      description: "Rate limit for NOMADS (be a good citizen)"
+      value: 20
+
+    - name: temp_dir
+      kind: string
+      label: Temp Directory
+      description: "Directory for temporary GRIB2 files"
+
+    - name: strict_mode
+      kind: boolean
+      label: Strict Mode
+      description: "Fail on errors (true) or skip and continue (false)"
+      value: false
+
+    select:
+    - forecast_runs.*
+    - forecast_data.*
+
     config:
-      start_date: 6 months ago
+      source: "nomads"
+      start_date: "2026-03-12"
+      cycles: ["00", "12"]
+      forecast_hours: [0, 6, 12, 18, 24, 48, 72, 96, 120, 168, 240, 336]
+      variables: ["TMP", "UGRD", "VGRD", "APCP", "RH"]
+      levels: ["2 m above ground", "10 m above ground", "surface"]
+      bounding_box:
+        north: 50
+        south: 24
+        west: -125
+        east: -66
+      grid_step: 4
+      max_requests_per_minute: 20
 
   loaders:
   - name: target-jsonl

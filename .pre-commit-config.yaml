@@ -36,3 +36,12 @@ repos:
   hooks:
   - id: uv-lock
   - id: uv-sync
+
+- repo: local
+  hooks:
+  - id: smoke-test
+    name: smoke-test
+    entry: uv run pytest tests/test_smoke.py -x -q
+    language: system
+    pass_filenames: false
+    always_run: true

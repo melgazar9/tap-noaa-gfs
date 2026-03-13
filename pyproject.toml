@@ -8,12 +8,18 @@ build-backend = "hatchling.build"
 [project]
 name = "tap-noaa-gfs"
 version = "0.0.1"
-description = "Singer tap for NoaaGfs, built with the Meltano Singer SDK."
+description = "Singer tap for NOAA GFS weather forecast model data (GRIB2), built with the Meltano Singer SDK."
 readme = "README.md"
 authors = [{ name = "Matt Elgazar", email = "melgazar9@gmail.com" }]
 keywords = [
     "ELT",
-    "NoaaGfs",
+    "NOAA",
+    "GFS",
+    "weather",
+    "forecast",
+    "GRIB2",
+    "Singer",
+    "Meltano",
 ]
 classifiers = [
     "Intended Audience :: Developers",
@@ -22,24 +28,23 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
 ]
 license = "MIT"
-license-files = [ "LICENSE" ]
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
 dependencies = [
     "singer-sdk~=0.53.5",
     "typing-extensions>=4.5.0; python_version < '3.13'",
-]
-
-[project.optional-dependencies]
-s3 = [
-    "s3fs>=2026.1.0",
+    "requests~=2.32.3",
+    "backoff>=2.2.1,<3.0.0",
+    "cfgrib>=0.9.10",
+    "xarray>=2024.1.0",
+    "eccodes>=1.6.0",
+    "numpy>=1.26.0",
 ]
 
 [project.scripts]
-# CLI declaration
-tap-noaa-gfs = 'tap_noaa_gfs.tap:TapNoaaGfs.cli'
+tap-noaa-gfs = "tap_noaa_gfs.tap:TapNoaaGfs.cli"
 
 [dependency-groups]
 dev = [
@@ -103,13 +108,18 @@ ignore = [
 ]
 select = ["ALL"]
 
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "S101",    # assert is fine in tests
+    "PLR2004", # magic values are fine in tests
+]
+
 [tool.ruff.lint.flake8-annotations]
 allow-star-arg-any = true
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
-# This configuration can be used to customize tox environments
 [tool.tox]
 min_version = "4.43"
 requires = [
@@ -118,9 +128,10 @@ requires = [
 ]
 env_list = [
     "typing",
-    { product = [
-        { prefix = "3.", start = 10 },
-    ] },
+    "3.10",
+    "3.11",
+    "3.12",
+    "3.13",
 ]
 
 [tool.tox.env_run_base]
@@ -129,12 +140,12 @@ pass_env = [
     "GITHUB_*",
     "TAP_NOAA_GFS_*",
 ]
-dependency_groups = [ "test" ]
-commands = [ [ "pytest", { replace = "posargs", default = [ "tests" ], extend = true } ] ]
+dependency_groups = ["test"]
+commands = [["pytest", { replace = "posargs", default = ["tests"], extend = true }]]
 
 [tool.tox.env.typing]
-dependency_groups = [ "test", "typing" ]
+dependency_groups = ["test", "typing"]
 commands = [
-    [ "mypy", { replace = "posargs", default = [ "tap_noaa_gfs", "tests" ], extend = true } ],
-    [ "ty", "check", { replace = "posargs", default = [ "tap_noaa_gfs", "tests" ], extend = true } ],
+    ["mypy", { replace = "posargs", default = ["tap_noaa_gfs", "tests"], extend = true }],
+    ["ty", "check", { replace = "posargs", default = ["tap_noaa_gfs", "tests"], extend = true }],
 ]
