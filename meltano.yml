@@ -1,7 +1,7 @@
-version: 1
 send_anonymous_usage_stats: false
 project_id: "tap-noaa-gfs"
 default_environment: test
+
 requires_meltano: ">=4.0"
 environments:
 - name: test
